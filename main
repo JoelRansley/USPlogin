@@ -1,0 +1,950 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1, viewport-fit=cover, maximum-scale=1">
+<title>Student Portal</title>
+<link rel="manifest" href="manifest.json">
+<link rel="icon" href="favicon.ico" sizes="any">
+<link rel="icon" href="favicon-64.png" type="image/png">
+<meta name="apple-mobile-web-app-capable" content="yes">
+<meta name="apple-mobile-web-app-status-bar-style" content="black-translucent">
+<meta name="apple-mobile-web-app-title" content="Student ID">
+<meta name="theme-color" content="#1094ab">
+<link rel="apple-touch-icon" href="icon-180.png">
+<style>
+  :root{
+    --navy-dark:#063641;
+    --navy:#1094ab;
+    --navy-mid:#0C7A8C;
+    --steel:#64c4d2;
+    --gold:#fcb421;
+    --gold-light:#FFD37A;
+    --paper:#EEF3F4;
+    --card:#FFFFFF;
+    --border:#BFDAE0;
+    --text:#1C1E22;
+    --muted:#5B6472;
+    --danger:#7A2E2E;
+    --radius:3px;
+  }
+  *{box-sizing:border-box; -webkit-tap-highlight-color:transparent;}
+  html,body{height:100%;}
+  body{
+    margin:0;
+    background:var(--paper);
+    color:var(--text);
+    font-family:Arial, Helvetica, "Segoe UI", sans-serif;
+    -webkit-font-smoothing:antialiased;
+    overscroll-behavior-y:none;
+  }
+  .serif{ font-family:Georgia, "Times New Roman", serif; }
+  .mono{ font-family:"SFMono-Regular", Consolas, "Courier New", monospace; letter-spacing:0.5px; }
+
+  #app{
+    display:flex;
+    flex-direction:column;
+    min-height:100vh;
+    min-height:100dvh;
+  }
+
+  /* ---------- HEADER ---------- */
+  header.topbar{
+    background:linear-gradient(180deg, var(--navy) 0%, var(--navy-dark) 100%);
+    padding-top:env(safe-area-inset-top);
+    border-bottom:3px solid var(--gold);
+    color:#fff;
+    flex-shrink:0;
+  }
+  .topbar-inner{
+    display:flex;
+    align-items:center;
+    gap:10px;
+    padding:10px 14px 10px 12px;
+  }
+  .seal{
+    height:26px;
+    width:auto;
+    flex-shrink:0;
+    display:block;
+  }
+  .topbar-titles{ line-height:1.15; min-width:0; }
+  .topbar-titles .inst{
+    font-size:10.5px;
+    letter-spacing:1.2px;
+    text-transform:uppercase;
+    color:var(--gold-light);
+    font-weight:bold;
+  }
+  .topbar-titles .sys{
+    font-family:Georgia, serif;
+    font-size:16px;
+    font-weight:bold;
+    color:#fff;
+    white-space:nowrap;
+    overflow:hidden;
+    text-overflow:ellipsis;
+  }
+  .topbar-spacer{ flex:1; }
+  .icon-btn{
+    background:rgba(255,255,255,0.08);
+    border:1px solid rgba(255,255,255,0.25);
+    color:#fff;
+    width:32px; height:32px;
+    border-radius:50%;
+    display:flex; align-items:center; justify-content:center;
+    font-size:14px;
+    flex-shrink:0;
+  }
+  .subbar{
+    background:var(--navy-mid);
+    color:var(--gold-light);
+    font-size:11px;
+    padding:5px 14px;
+    letter-spacing:0.4px;
+    border-top:1px solid rgba(255,255,255,0.08);
+    display:flex;
+    justify-content:space-between;
+  }
+
+  /* ---------- MAIN ---------- */
+  main{
+    flex:1;
+    overflow-y:auto;
+    padding:14px 12px 90px 12px;
+  }
+  .view{ display:none; animation:fade .18s ease; }
+  .view.active{ display:block; }
+  @keyframes fade{ from{opacity:0; transform:translateY(4px);} to{opacity:1; transform:none;} }
+
+  .panel{
+    background:var(--card);
+    border:1px solid var(--border);
+    border-radius:var(--radius);
+    margin-bottom:14px;
+    overflow:hidden;
+    box-shadow:0 1px 2px rgba(10,42,84,0.06);
+  }
+  .panel-title{
+    background:var(--navy);
+    color:#fff;
+    font-size:12.5px;
+    font-weight:bold;
+    letter-spacing:0.6px;
+    text-transform:uppercase;
+    padding:8px 12px;
+    display:flex;
+    align-items:center;
+    justify-content:space-between;
+    border-bottom:2px solid var(--gold);
+  }
+  .panel-title .edit-toggle{
+    font-size:10.5px;
+    text-transform:none;
+    font-weight:normal;
+    letter-spacing:0;
+    color:var(--gold-light);
+    background:none;
+    border:1px solid rgba(255,255,255,0.3);
+    padding:3px 8px;
+    border-radius:2px;
+  }
+  .panel-body{ padding:12px; }
+
+  /* ---------- ID CARD ---------- */
+  .card-id{
+    position:relative;
+    border:1px solid var(--gold);
+    border-radius:6px;
+    background:
+      radial-gradient(circle at 100% 0%, rgba(199,160,61,0.10), transparent 55%),
+      linear-gradient(135deg, #ffffff 0%, #f5f6f8 100%);
+    padding:14px;
+  }
+  .card-id::before{
+    content:"";
+    position:absolute; inset:5px;
+    border:1px solid #dfe4ea;
+    border-radius:3px;
+    pointer-events:none;
+  }
+  .card-id-watermark{
+    position:absolute;
+    right:14px; top:12px;
+    height:22px;
+    width:auto;
+    opacity:0.14;
+    pointer-events:none;
+  }
+  .card-id-top{
+    display:flex;
+    gap:12px;
+  }
+  .photo-box{
+    width:78px; height:96px;
+    border:1.5px solid var(--navy);
+    background:#dfe4ea;
+    flex-shrink:0;
+    display:flex; align-items:center; justify-content:center;
+    overflow:hidden;
+    color:var(--muted);
+    font-size:10px;
+    text-align:center;
+    position:relative;
+  }
+  .photo-box img{ width:100%; height:100%; object-fit:cover; }
+  .id-fields{ flex:1; min-width:0; }
+  .id-name{
+    font-family:Georgia, serif;
+    font-weight:bold;
+    font-size:16.5px;
+    color:var(--navy-dark);
+    line-height:1.2;
+    margin-bottom:6px;
+    word-break:break-word;
+  }
+  .id-row{
+    display:flex;
+    font-size:11.5px;
+    margin-bottom:3px;
+    gap:6px;
+  }
+  .id-row .lbl{
+    color:var(--muted);
+    text-transform:uppercase;
+    letter-spacing:0.4px;
+    font-size:9.5px;
+    width:64px;
+    flex-shrink:0;
+    padding-top:1px;
+  }
+  .id-row .val{ font-weight:bold; color:var(--text); }
+  .id-ra{ font-size:13px; }
+
+  .card-id-foot{
+    margin-top:12px;
+    padding-top:10px;
+    border-top:1px dashed #c7cdd6;
+    display:flex;
+    align-items:center;
+    justify-content:space-between;
+  }
+  .barcode{
+    height:26px;
+    flex:1;
+    background:repeating-linear-gradient(90deg, var(--navy) 0 2px, transparent 2px 3px, var(--navy) 3px 5px, transparent 5px 8px, var(--navy) 8px 9px, transparent 9px 12px);
+    margin-right:10px;
+  }
+  .validity{
+    font-size:9px;
+    text-align:right;
+    color:var(--muted);
+    line-height:1.3;
+    white-space:nowrap;
+  }
+  .validity b{ color:var(--text); font-family:inherit; }
+
+  /* ---------- TABLES (classes / details) ---------- */
+  table.data{
+    width:100%;
+    border-collapse:collapse;
+    font-size:12.5px;
+  }
+  table.data th{
+    text-align:left;
+    background:#DDE3EC;
+    color:var(--navy-dark);
+    font-size:10px;
+    text-transform:uppercase;
+    letter-spacing:0.3px;
+    padding:6px 8px;
+    border-bottom:1px solid var(--border);
+  }
+  table.data td{
+    padding:7px 8px;
+    border-bottom:1px solid #E7EAEF;
+    vertical-align:top;
+  }
+  table.data tr:nth-child(even) td{ background:#F6F7F9; }
+  table.data tr:last-child td{ border-bottom:none; }
+  .day-tag{
+    display:inline-block;
+    font-size:9.5px;
+    font-weight:bold;
+    color:var(--navy-dark);
+    background:var(--gold-light);
+    border:1px solid var(--gold);
+    padding:1px 5px;
+    border-radius:2px;
+    margin-bottom:2px;
+  }
+  .class-name{ font-weight:bold; }
+  .class-sub{ color:var(--muted); font-size:11px; }
+
+  .empty-row{
+    padding:18px 10px;
+    text-align:center;
+    color:var(--muted);
+    font-size:12px;
+  }
+
+  .details-list{ font-size:13px; }
+  .details-list .drow{
+    display:flex;
+    justify-content:space-between;
+    gap:10px;
+    padding:8px 0;
+    border-bottom:1px solid #E7EAEF;
+  }
+  .details-list .drow:last-child{ border-bottom:none; }
+  .details-list .dlbl{ color:var(--muted); font-size:11.5px; padding-top:1px; }
+  .details-list .dval{ font-weight:bold; text-align:right; }
+  .details-list input{
+    text-align:right;
+    border:none;
+    border-bottom:1px solid var(--border);
+    font:inherit;
+    font-weight:bold;
+    color:var(--text);
+    background:#FBFCFD;
+    width:60%;
+    padding:2px 2px;
+  }
+
+  .add-row-btn, .save-btn{
+    width:100%;
+    background:var(--navy);
+    color:#fff;
+    border:none;
+    padding:9px;
+    font-size:12px;
+    font-weight:bold;
+    letter-spacing:0.4px;
+    text-transform:uppercase;
+    border-radius:2px;
+    margin-top:8px;
+  }
+  .save-btn{ background:var(--gold); color:var(--navy-dark); }
+
+  .field-row{ margin-bottom:8px; }
+  .field-row label{
+    display:block;
+    font-size:10px;
+    text-transform:uppercase;
+    letter-spacing:0.4px;
+    color:var(--muted);
+    margin-bottom:3px;
+  }
+  .field-row input, .field-row select{
+    width:100%;
+    border:1px solid var(--border);
+    background:#fff;
+    padding:8px;
+    font-size:14px;
+    border-radius:2px;
+    font-family:inherit;
+  }
+  .field-grid{ display:grid; grid-template-columns:1fr 1fr; gap:8px 10px; }
+  .modal-actions{ display:flex; gap:8px; margin-top:10px; }
+  .modal-actions button{ flex:1; }
+  .btn-secondary{
+    background:#fff; color:var(--navy); border:1px solid var(--navy);
+    padding:9px; font-size:12px; font-weight:bold; text-transform:uppercase; border-radius:2px;
+  }
+
+  .photo-picker{
+    display:flex; align-items:center; gap:10px; margin-bottom:10px;
+  }
+  .photo-picker .photo-box{ width:56px; height:70px; }
+  .photo-picker label.filebtn{
+    background:#fff; border:1px solid var(--navy); color:var(--navy);
+    font-size:11px; font-weight:bold; padding:7px 10px; border-radius:2px; text-transform:uppercase;
+  }
+
+  /* ---------- TAB BAR ---------- */
+  nav.tabbar{
+    position:fixed;
+    left:0; right:0; bottom:0;
+    background:var(--navy-dark);
+    border-top:2px solid var(--gold);
+    display:flex;
+    padding-bottom:env(safe-area-inset-bottom);
+    z-index:20;
+  }
+  nav.tabbar button{
+    flex:1;
+    background:none;
+    border:none;
+    color:#8FA3C2;
+    padding:9px 4px 8px 4px;
+    display:flex;
+    flex-direction:column;
+    align-items:center;
+    gap:3px;
+    font-size:10px;
+    font-weight:bold;
+    letter-spacing:0.3px;
+    text-transform:uppercase;
+    font-family:inherit;
+  }
+  nav.tabbar button .ic{ font-size:19px; line-height:1; }
+  nav.tabbar button.active{ color:var(--gold-light); }
+  nav.tabbar button.active .ic{ filter:drop-shadow(0 0 3px rgba(199,160,61,0.5)); }
+
+  /* modal overlay */
+  .overlay{
+    position:fixed; inset:0; background:rgba(7,29,59,0.55);
+    display:none; align-items:flex-end; justify-content:center; z-index:50;
+  }
+  .overlay.active{ display:flex; }
+  .sheet{
+    background:var(--paper);
+    width:100%;
+    max-width:520px;
+    max-height:85dvh;
+    overflow-y:auto;
+    border-radius:10px 10px 0 0;
+    border-top:3px solid var(--gold);
+    padding:14px 14px calc(16px + env(safe-area-inset-bottom)) 14px;
+  }
+  .sheet h2{
+    font-family:Georgia, serif;
+    font-size:16px;
+    color:var(--navy-dark);
+    margin:0 0 10px 0;
+    padding-bottom:8px;
+    border-bottom:2px solid var(--gold);
+  }
+
+  /* ---------- LOGIN SCREEN ---------- */
+  #loginScreen{
+    position:fixed; inset:0; z-index:100;
+    background:
+      radial-gradient(circle at 50% 0%, rgba(199,160,61,0.10), transparent 45%),
+      linear-gradient(180deg, var(--navy-dark) 0%, #03242B 100%);
+    display:flex;
+    flex-direction:column;
+    align-items:center;
+    justify-content:center;
+    padding:24px 22px calc(24px + env(safe-area-inset-bottom)) 22px;
+    padding-top:calc(24px + env(safe-area-inset-top));
+  }
+  #loginScreen.hidden{ display:none; }
+  .login-seal{
+    height:52px;
+    width:auto;
+    margin-bottom:16px;
+    display:block;
+  }
+  .login-inst{
+    font-size:11px;
+    letter-spacing:1.4px;
+    text-transform:uppercase;
+    color:var(--gold-light);
+    font-weight:bold;
+    text-align:center;
+  }
+  .login-sys{
+    font-family:Georgia, serif;
+    font-size:21px;
+    font-weight:bold;
+    color:#fff;
+    text-align:center;
+    margin-top:2px;
+    margin-bottom:26px;
+  }
+  .login-box{
+    width:100%;
+    max-width:340px;
+    background:rgba(255,255,255,0.03);
+    border:1px solid rgba(199,160,61,0.35);
+    border-radius:4px;
+    padding:18px 16px;
+  }
+  .login-box .field-row label{ color:var(--gold-light); }
+  .login-box .field-row input{
+    background:rgba(255,255,255,0.06);
+    border:1px solid rgba(255,255,255,0.25);
+    color:#fff;
+  }
+  .login-box .field-row input::placeholder{ color:rgba(255,255,255,0.35); }
+  .login-btn{
+    width:100%;
+    background:var(--gold);
+    color:var(--navy-dark);
+    border:none;
+    padding:11px;
+    font-size:13px;
+    font-weight:bold;
+    letter-spacing:0.5px;
+    text-transform:uppercase;
+    border-radius:2px;
+    margin-top:6px;
+  }
+  .login-note{
+    margin-top:16px;
+    font-size:10.5px;
+    color:#7C8AA3;
+    text-align:center;
+    max-width:300px;
+    line-height:1.5;
+  }
+  .login-error{
+    display:none;
+    background:rgba(122,46,46,0.25);
+    border:1px solid var(--danger);
+    color:#F3D6D6;
+    font-size:11.5px;
+    padding:7px 9px;
+    border-radius:2px;
+    margin-bottom:10px;
+  }
+</style>
+</head>
+<body>
+
+<div id="loginScreen">
+  <img class="login-seal" src="logo-white.png" alt="USP">
+  <div class="login-inst">Universidade de São Paulo</div>
+  <div class="login-sys">Portal do Estudante</div>
+  <div class="login-box">
+    <div class="login-error" id="loginError">Credenciais inválidas. Verifique e tente novamente.</div>
+    <div class="field-row">
+      <label>E-mail institucional</label>
+      <input type="email" id="loginEmail" placeholder="nome.sobrenome@usp.br" autocomplete="username">
+    </div>
+    <div class="field-row" style="margin-bottom:0;">
+      <label>Senha</label>
+      <input type="password" id="loginPassword" placeholder="••••••••" autocomplete="current-password">
+    </div>
+    <button class="login-btn" id="loginBtn">Entrar</button>
+  </div>
+  <div class="login-note">Acesso restrito à comunidade USP.<br>Em caso de dúvidas, procure a Central de Atendimento ao Aluno.</div>
+</div>
+
+<div id="app">
+
+  <header class="topbar">
+    <div class="topbar-inner">
+      <img class="seal" src="logo-white.png" alt="USP">
+      <div class="topbar-titles">
+        <div class="inst" id="instName">Universidade</div>
+        <div class="sys">Portal do Estudante</div>
+      </div>
+      <div class="topbar-spacer"></div>
+      <button class="icon-btn" id="editDetailsBtn" title="Edit">&#9998;</button>
+    </div>
+    <div class="subbar">
+      <span id="subbarLeft">6&ordm; Semestre &middot; <span id="logoutLink" style="text-decoration:underline; cursor:pointer;">Sair</span></span>
+      <span id="clock">--:--</span>
+    </div>
+  </header>
+
+  <main>
+
+    <!-- ID VIEW -->
+    <section class="view active" id="view-id">
+      <div class="panel">
+        <div class="panel-title">Carteira de Identificação</div>
+        <div class="panel-body">
+          <div class="card-id">
+            <img class="card-id-watermark" src="logo-natural.png" alt="">
+            <div class="card-id-top">
+              <div class="photo-box" id="idPhotoBox">FOTO</div>
+              <div class="id-fields">
+                <div class="id-name" id="idName">Nome do Estudante</div>
+                <div class="id-row"><span class="lbl">RA</span><span class="val mono id-ra" id="idRA">0000000</span></div>
+                <div class="id-row"><span class="lbl">Curso</span><span class="val" id="idCourse">—</span></div>
+                <div class="id-row"><span class="lbl">Unidade</span><span class="val" id="idUnit">—</span></div>
+              </div>
+            </div>
+            <div class="card-id-foot">
+              <div class="barcode"></div>
+              <div class="validity">Validade<br><b id="idValidity">—</b></div>
+            </div>
+          </div>
+        </div>
+      </div>
+    </section>
+
+    <!-- CLASSES VIEW -->
+    <section class="view" id="view-classes">
+      <div class="panel">
+        <div class="panel-title">
+          Grade de Horários
+          <button class="edit-toggle" id="addClassBtn">+ Disciplina</button>
+        </div>
+        <div class="panel-body" style="padding:0;">
+          <table class="data" id="classesTable">
+            <thead>
+              <tr><th style="width:30%">Dia / Horário</th><th>Disciplina</th><th style="width:22%">Local</th></tr>
+            </thead>
+            <tbody id="classesBody"></tbody>
+          </table>
+          <div class="empty-row" id="classesEmpty" style="display:none;">Nenhuma disciplina cadastrada.</div>
+        </div>
+      </div>
+    </section>
+
+    <!-- DETAILS VIEW -->
+    <section class="view" id="view-details">
+      <div class="panel">
+        <div class="panel-title">
+          Dados Pessoais
+          <button class="edit-toggle" id="editDetailsBtn2">Editar</button>
+        </div>
+        <div class="panel-body">
+          <div class="details-list" id="detailsList"></div>
+        </div>
+      </div>
+    </section>
+
+  </main>
+
+  <nav class="tabbar">
+    <button class="tab-btn active" data-view="view-id">
+      <span class="ic">&#127917;</span>ID
+    </button>
+    <button class="tab-btn" data-view="view-classes">
+      <span class="ic">&#128197;</span>Turmas
+    </button>
+    <button class="tab-btn" data-view="view-details">
+      <span class="ic">&#128100;</span>Dados
+    </button>
+  </nav>
+</div>
+
+<!-- EDIT ID/PERSONAL SHEET -->
+<div class="overlay" id="editOverlay">
+  <div class="sheet">
+    <h2>Editar Carteira e Dados</h2>
+    <div class="photo-picker">
+      <div class="photo-box" id="editPhotoPreview">FOTO</div>
+      <label class="filebtn">Escolher Foto<input type="file" accept="image/*" id="photoInput" style="display:none;"></label>
+    </div>
+    <div class="field-row"><label>Instituição</label><input id="f-inst" placeholder="Universidade de São Paulo"></div>
+    <div class="field-row"><label>Nome completo</label><input id="f-name" placeholder="Nome do Estudante"></div>
+    <div class="field-grid">
+      <div class="field-row"><label>RA / Matrícula</label><input id="f-ra" placeholder="0000000"></div>
+      <div class="field-row"><label>Validade</label><input id="f-validity" placeholder="12/2027"></div>
+    </div>
+    <div class="field-row"><label>Curso</label><input id="f-course" placeholder="Curso"></div>
+    <div class="field-row"><label>Unidade / Campus</label><input id="f-unit" placeholder="Unidade"></div>
+    <div class="field-row"><label>E-mail</label><input id="f-email" placeholder="nome@usp.br"></div>
+    <div class="field-row"><label>Telefone</label><input id="f-phone" placeholder="(11) 90000-0000"></div>
+    <div class="field-row"><label>Data de nascimento</label><input id="f-birth" placeholder="DD/MM/AAAA"></div>
+    <div class="field-row"><label>Endereço</label><input id="f-address" placeholder="Endereço"></div>
+    <div class="modal-actions">
+      <button class="btn-secondary" id="cancelEdit">Cancelar</button>
+      <button class="save-btn" id="saveEdit">Salvar</button>
+    </div>
+  </div>
+</div>
+
+<!-- ADD CLASS SHEET -->
+<div class="overlay" id="classOverlay">
+  <div class="sheet">
+    <h2>Adicionar Disciplina</h2>
+    <div class="field-row"><label>Disciplina</label><input id="c-name" placeholder="Ex: Cálculo I"></div>
+    <div class="field-row"><label>Código (opcional)</label><input id="c-code" placeholder="Ex: MAT0111"></div>
+    <div class="field-grid">
+      <div class="field-row">
+        <label>Dia</label>
+        <select id="c-day">
+          <option>Segunda</option><option>Terça</option><option>Quarta</option>
+          <option>Quinta</option><option>Sexta</option><option>Sábado</option>
+        </select>
+      </div>
+      <div class="field-row"><label>Horário</label><input id="c-time" placeholder="08:00–10:00"></div>
+    </div>
+    <div class="field-row"><label>Sala / Local</label><input id="c-room" placeholder="Ex: Sala 12"></div>
+    <div class="modal-actions">
+      <button class="btn-secondary" id="cancelClass">Cancelar</button>
+      <button class="save-btn" id="saveClass">Adicionar</button>
+    </div>
+  </div>
+</div>
+
+<script>
+(function(){
+  "use strict";
+  var STORE_KEY = "studentPortal.v1";
+  var SESSION_KEY = "studentPortal.session";
+
+  // ---- login gate (accepts any email/password combination) ----
+  var loginScreen = document.getElementById("loginScreen");
+  var appEl = document.getElementById("app");
+  var loginError = document.getElementById("loginError");
+
+  function showApp(){
+    loginScreen.classList.add("hidden");
+    appEl.style.display = "";
+  }
+  function showLogin(){
+    appEl.style.display = "none";
+    loginScreen.classList.remove("hidden");
+    loginError.style.display = "none";
+    document.getElementById("loginEmail").value = "";
+    document.getElementById("loginPassword").value = "";
+  }
+
+  appEl.style.display = "none"; // hidden until login resolves
+
+  if(sessionStorage.getItem(SESSION_KEY) === "1"){
+    showApp();
+  } else {
+    showLogin();
+  }
+
+  document.getElementById("loginBtn").addEventListener("click", function(){
+    // Any non-empty email/password combination is accepted.
+    var email = document.getElementById("loginEmail").value.trim();
+    var pw = document.getElementById("loginPassword").value;
+    if(!email || !pw){
+      loginError.textContent = "Preencha e-mail e senha para continuar.";
+      loginError.style.display = "block";
+      return;
+    }
+    sessionStorage.setItem(SESSION_KEY, "1");
+    showApp();
+  });
+
+  ["loginEmail","loginPassword"].forEach(function(id){
+    document.getElementById(id).addEventListener("keydown", function(e){
+      if(e.key === "Enter") document.getElementById("loginBtn").click();
+    });
+  });
+
+  document.getElementById("logoutLink").addEventListener("click", function(){
+    sessionStorage.removeItem(SESSION_KEY);
+    showLogin();
+  });
+
+  var defaultData = {
+    inst: "Universidade de São Paulo",
+    name: "Nome do Estudante",
+    ra: "0000000",
+    course: "Arquitetura e Urbanismo",
+    unit: "Faculdade de Arquitetura e Urbanismo (FAU)",
+    validity: "12/2026",
+    email: "",
+    phone: "",
+    birth: "",
+    address: "",
+    photo: "",
+    classes: [
+      { name:"Projeto de Arquitetura V", code:"AUT0345", day:"Segunda", time:"08:00–12:00", room:"Ateliê 3" },
+      { name:"História da Arquitetura Moderna", code:"AUH0212", day:"Segunda", time:"14:00–16:00", room:"Sala 8" },
+      { name:"Sistemas Estruturais II", code:"AUT0512", day:"Terça", time:"08:00–10:00", room:"Sala 15" },
+      { name:"Projeto de Arquitetura V", code:"AUT0345", day:"Quarta", time:"08:00–12:00", room:"Ateliê 3" },
+      { name:"Conforto Ambiental e Eficiência Energética", code:"AUT0433", day:"Quarta", time:"14:00–16:00", room:"Sala 10" },
+      { name:"Urbanismo Contemporâneo", code:"AUP0350", day:"Quinta", time:"10:00–12:00", room:"Sala 6" },
+      { name:"Materiais e Técnicas Construtivas", code:"AUT0298", day:"Sexta", time:"08:00–10:00", room:"Laboratório de Materiais" }
+    ]
+  };
+
+  function load(){
+    try{
+      var raw = localStorage.getItem(STORE_KEY);
+      if(!raw) return JSON.parse(JSON.stringify(defaultData));
+      var parsed = JSON.parse(raw);
+      return Object.assign(JSON.parse(JSON.stringify(defaultData)), parsed);
+    }catch(e){ return JSON.parse(JSON.stringify(defaultData)); }
+  }
+  function save(data){ localStorage.setItem(STORE_KEY, JSON.stringify(data)); }
+
+  var data = load();
+
+  // ---- render ID ----
+  function renderId(){
+    document.getElementById("instName").textContent = data.inst || "Universidade";
+    document.getElementById("idName").textContent = data.name || "Nome do Estudante";
+    document.getElementById("idRA").textContent = data.ra || "—";
+    document.getElementById("idCourse").textContent = data.course || "—";
+    document.getElementById("idUnit").textContent = data.unit || "—";
+    document.getElementById("idValidity").textContent = data.validity || "—";
+    var box = document.getElementById("idPhotoBox");
+    box.innerHTML = data.photo ? '<img src="'+data.photo+'" alt="Foto">' : "FOTO";
+  }
+
+  // ---- render details ----
+  function renderDetails(){
+    var list = document.getElementById("detailsList");
+    var rows = [
+      ["Nome", data.name],
+      ["RA / Matrícula", data.ra],
+      ["Curso", data.course],
+      ["Unidade", data.unit],
+      ["E-mail", data.email || "—"],
+      ["Telefone", data.phone || "—"],
+      ["Nascimento", data.birth || "—"],
+      ["Endereço", data.address || "—"]
+    ];
+    list.innerHTML = rows.map(function(r){
+      return '<div class="drow"><span class="dlbl">'+r[0]+'</span><span class="dval">'+escapeHtml(r[1] || "—")+'</span></div>';
+    }).join("");
+  }
+
+  function escapeHtml(s){
+    return String(s).replace(/[&<>"']/g, function(c){
+      return {"&":"&amp;","<":"&lt;",">":"&gt;",'"':"&quot;","'":"&#39;"}[c];
+    });
+  }
+
+  // ---- render classes ----
+  var dayOrder = ["Segunda","Terça","Quarta","Quinta","Sexta","Sábado","Domingo"];
+  function renderClasses(){
+    var body = document.getElementById("classesBody");
+    var empty = document.getElementById("classesEmpty");
+    var sorted = data.classes.slice().sort(function(a,b){
+      return dayOrder.indexOf(a.day) - dayOrder.indexOf(b.day) || (a.time||"").localeCompare(b.time||"");
+    });
+    if(sorted.length === 0){
+      body.innerHTML = "";
+      empty.style.display = "block";
+      return;
+    }
+    empty.style.display = "none";
+    body.innerHTML = sorted.map(function(c, idx){
+      return '<tr>'+
+        '<td><span class="day-tag">'+escapeHtml(c.day)+'</span><br>'+escapeHtml(c.time||"—")+'</td>'+
+        '<td><div class="class-name">'+escapeHtml(c.name)+'</div>'+(c.code ? '<div class="class-sub">'+escapeHtml(c.code)+'</div>' : '')+'</td>'+
+        '<td>'+escapeHtml(c.room || "—")+'</td>'+
+        '</tr>';
+    }).join("");
+  }
+
+  function renderAll(){ renderId(); renderDetails(); renderClasses(); }
+  renderAll();
+
+  // ---- tab navigation ----
+  var tabBtns = document.querySelectorAll(".tab-btn");
+  tabBtns.forEach(function(btn){
+    btn.addEventListener("click", function(){
+      tabBtns.forEach(function(b){ b.classList.remove("active"); });
+      btn.classList.add("active");
+      document.querySelectorAll(".view").forEach(function(v){ v.classList.remove("active"); });
+      document.getElementById(btn.dataset.view).classList.add("active");
+    });
+  });
+
+  // ---- clock ----
+  function tick(){
+    var d = new Date();
+    var hh = String(d.getHours()).padStart(2,"0");
+    var mm = String(d.getMinutes()).padStart(2,"0");
+    document.getElementById("clock").textContent = hh+":"+mm;
+  }
+  tick(); setInterval(tick, 15000);
+
+  // ---- edit sheet ----
+  var editOverlay = document.getElementById("editOverlay");
+  var editPhotoData = "";
+
+  function openEdit(){
+    document.getElementById("f-inst").value = data.inst || "";
+    document.getElementById("f-name").value = data.name || "";
+    document.getElementById("f-ra").value = data.ra || "";
+    document.getElementById("f-validity").value = data.validity || "";
+    document.getElementById("f-course").value = data.course || "";
+    document.getElementById("f-unit").value = data.unit || "";
+    document.getElementById("f-email").value = data.email || "";
+    document.getElementById("f-phone").value = data.phone || "";
+    document.getElementById("f-birth").value = data.birth || "";
+    document.getElementById("f-address").value = data.address || "";
+    editPhotoData = data.photo || "";
+    var pv = document.getElementById("editPhotoPreview");
+    pv.innerHTML = editPhotoData ? '<img src="'+editPhotoData+'" alt="Foto">' : "FOTO";
+    editOverlay.classList.add("active");
+  }
+  document.getElementById("editDetailsBtn").addEventListener("click", openEdit);
+  document.getElementById("editDetailsBtn2").addEventListener("click", openEdit);
+  document.getElementById("cancelEdit").addEventListener("click", function(){ editOverlay.classList.remove("active"); });
+
+  document.getElementById("photoInput").addEventListener("change", function(e){
+    var file = e.target.files[0];
+    if(!file) return;
+    var reader = new FileReader();
+    reader.onload = function(ev){
+      editPhotoData = ev.target.result;
+      document.getElementById("editPhotoPreview").innerHTML = '<img src="'+editPhotoData+'" alt="Foto">';
+    };
+    reader.readAsDataURL(file);
+  });
+
+  document.getElementById("saveEdit").addEventListener("click", function(){
+    data.inst = document.getElementById("f-inst").value.trim() || defaultData.inst;
+    data.name = document.getElementById("f-name").value.trim() || defaultData.name;
+    data.ra = document.getElementById("f-ra").value.trim();
+    data.validity = document.getElementById("f-validity").value.trim();
+    data.course = document.getElementById("f-course").value.trim();
+    data.unit = document.getElementById("f-unit").value.trim();
+    data.email = document.getElementById("f-email").value.trim();
+    data.phone = document.getElementById("f-phone").value.trim();
+    data.birth = document.getElementById("f-birth").value.trim();
+    data.address = document.getElementById("f-address").value.trim();
+    data.photo = editPhotoData;
+    save(data);
+    renderAll();
+    editOverlay.classList.remove("active");
+  });
+
+  // ---- add class sheet ----
+  var classOverlay = document.getElementById("classOverlay");
+  document.getElementById("addClassBtn").addEventListener("click", function(){
+    document.getElementById("c-name").value = "";
+    document.getElementById("c-code").value = "";
+    document.getElementById("c-day").value = "Segunda";
+    document.getElementById("c-time").value = "";
+    document.getElementById("c-room").value = "";
+    classOverlay.classList.add("active");
+  });
+  document.getElementById("cancelClass").addEventListener("click", function(){ classOverlay.classList.remove("active"); });
+  document.getElementById("saveClass").addEventListener("click", function(){
+    var name = document.getElementById("c-name").value.trim();
+    if(!name){ document.getElementById("c-name").focus(); return; }
+    data.classes.push({
+      name: name,
+      code: document.getElementById("c-code").value.trim(),
+      day: document.getElementById("c-day").value,
+      time: document.getElementById("c-time").value.trim(),
+      room: document.getElementById("c-room").value.trim()
+    });
+    save(data);
+    renderClasses();
+    classOverlay.classList.remove("active");
+  });
+
+  // allow tap on a class row to delete (long-press-free simple UX)
+  document.getElementById("classesBody").addEventListener("click", function(e){
+    var tr = e.target.closest("tr");
+    if(!tr) return;
+    var idx = Array.prototype.indexOf.call(tr.parentNode.children, tr);
+    var sorted = data.classes.slice().sort(function(a,b){
+      return dayOrder.indexOf(a.day) - dayOrder.indexOf(b.day) || (a.time||"").localeCompare(b.time||"");
+    });
+    var target = sorted[idx];
+    if(!target) return;
+    if(confirm('Remover "'+target.name+'" da grade?')){
+      var realIdx = data.classes.indexOf(target);
+      data.classes.splice(realIdx,1);
+      save(data);
+      renderClasses();
+    }
+  });
+
+  // close sheets on backdrop tap
+  [editOverlay, classOverlay].forEach(function(ov){
+    ov.addEventListener("click", function(e){
+      if(e.target === ov) ov.classList.remove("active");
+    });
+  });
+
+  // register service worker for offline installability (optional, best-effort)
+  if("serviceWorker" in navigator){
+    navigator.serviceWorker.register("sw.js").catch(function(){});
+  }
+})();
+</script>
+</body>
+</html>
